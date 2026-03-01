@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 from collections import deque
 
-# 1. The Brain Structure
+# 1. The Brain Structure (Updated to 4 Neurons!)
 class MiniLipNet(nn.Module):
     def __init__(self):
         super().__init__()
@@ -16,7 +16,7 @@ class MiniLipNet(nn.Module):
         self.conv2 = nn.Conv3d(8, 16, kernel_size=3, padding=1)
         self.pool2 = nn.MaxPool3d((2, 4, 4))
         self.fc1 = nn.Linear(16 * 7 * 6 * 6, 64)
-        self.fc2 = nn.Linear(64, 3)
+        self.fc2 = nn.Linear(64, 4) # Now 4 classes: open, close, stop, silence
         self.relu = nn.ReLU()
 
     def forward(self, x):
@@ -29,15 +29,15 @@ class MiniLipNet(nn.Module):
         x = self.fc2(x)
         return x
 
-# 2. Wake up the AI
+# 2. Wake up the AI (Updated to point to the 'models' folder)
 print("Waking up the AI Brain...")
-words = ["open", "close", "stop"]
+words = ["open", "close", "stop", "silence"]
 model = MiniLipNet()
-model.load_state_dict(torch.load("lip_model.pth", weights_only=True))
+model.load_state_dict(torch.load("models/lip_model.pth", weights_only=True))
 model.eval() 
 
-# 3. Setup MediaPipe
-model_path = 'face_landmarker.task'
+# 3. Setup MediaPipe (Updated to point to the 'models' folder)
+model_path = 'models/face_landmarker.task'
 base_options = python.BaseOptions(model_asset_path=model_path)
 options = vision.FaceLandmarkerOptions(base_options=base_options, num_faces=1, running_mode=vision.RunningMode.IMAGE)
 detector = vision.FaceLandmarker.create_from_options(options)
@@ -46,7 +46,6 @@ detector = vision.FaceLandmarker.create_from_options(options)
 SEQUENCE_LENGTH = 29
 frame_buffer = deque(maxlen=SEQUENCE_LENGTH)
 
-# Variables to keep the text on the screen for a moment
 current_prediction = ""
 display_timer = 0 
 
@@ -87,7 +86,7 @@ while True:
             frame_buffer.append(lips_normalized)
             cv2.imshow("AI Vision", lips_resized)
 
-    # 5. The Automatic Trigger (No Spacebar Needed!)
+    # 5. The Automatic Trigger 
     if len(frame_buffer) == SEQUENCE_LENGTH:
         input_data = np.array(frame_buffer)
         input_data = np.expand_dims(input_data, axis=0) 
@@ -98,19 +97,27 @@ while True:
         with torch.no_grad():
             prediction = model(input_tensor)
             best_guess_index = torch.argmax(prediction).item()
-            current_prediction = words[best_guess_index].upper()
+            predicted_word = words[best_guess_index]
             
-            # Set the timer so the text stays on screen for ~40 frames
-            display_timer = 40 
+            # Smart UI Logic: Handle the silence!
+            if predicted_word == "silence":
+                display_timer = 0 # Don't display a flashy alert
+            else:
+                current_prediction = f"AI Hears: {predicted_word.upper()}"
+                display_timer = 40 # Keep the word on screen for a moment
             
         # Instantly clear the buffer to start listening for the next word
         frame_buffer.clear() 
 
     # 6. Draw the AI's guess on the screen
     if display_timer > 0:
-        cv2.putText(frame, f"AI Hears: {current_prediction}", (30, 50), 
+        cv2.putText(frame, current_prediction, (30, 50), 
                     cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
         display_timer -= 1
+    else:
+        # Default state when sitting in silence
+        cv2.putText(frame, "Listening...", (30, 50), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200, 200, 200), 2)
 
     cv2.imshow("Main Camera", frame)
     

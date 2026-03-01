@@ -7,13 +7,13 @@ import os
 import time
 from collections import deque
 
-# 1. Setup Folders for our 3 words
-words = ["open", "close", "stop"]
+# 1. Setup Folders for our 4 words (Added 'silence')
+words = ["open", "close", "stop", "silence"]
 for word in words:
     os.makedirs(f"dataset/{word}", exist_ok=True)
 
-# 2. Setup Model
-model_path = 'face_landmarker.task'
+# 2. Setup Model (Updated to look in the 'models' folder)
+model_path = 'models/face_landmarker.task'
 base_options = python.BaseOptions(model_asset_path=model_path)
 options = vision.FaceLandmarkerOptions(
     base_options=base_options,
@@ -28,10 +28,11 @@ frame_buffer = deque(maxlen=SEQUENCE_LENGTH)
 
 cap = cv2.VideoCapture(0)
 print("\n--- LIP READING DATA COLLECTOR ---")
-print("Look at the camera and say the word.")
+print("Look at the camera and say the word (or sit still).")
 print("Press '1' right AFTER saying 'Open'")
 print("Press '2' right AFTER saying 'Close'")
 print("Press '3' right AFTER saying 'Stop'")
+print("Press '4' right AFTER sitting still for 'Silence'")
 print("Press 'q' to quit.\n")
 
 while True:
@@ -41,7 +42,6 @@ while True:
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
     result = detector.detect(mp_image)
-    lips_resized = None
 
     if len(result.face_landmarks) > 0:
         face_landmarks = result.face_landmarks[0]
@@ -70,8 +70,8 @@ while True:
     cv2.imshow("Main Camera", frame)
     key = cv2.waitKey(1) & 0xFF
 
-    # 4. Save the data if a key is pressed
-    if key in [ord('1'), ord('2'), ord('3')]:
+    # 4. Save the data if a key is pressed (Now includes '4')
+    if key in [ord('1'), ord('2'), ord('3'), ord('4')]:
         if len(frame_buffer) == SEQUENCE_LENGTH:
             video_sequence = np.array(frame_buffer)
             
@@ -79,6 +79,7 @@ while True:
             if key == ord('1'): word_idx = 0
             elif key == ord('2'): word_idx = 1
             elif key == ord('3'): word_idx = 2
+            elif key == ord('4'): word_idx = 3
             
             target_word = words[word_idx]
             

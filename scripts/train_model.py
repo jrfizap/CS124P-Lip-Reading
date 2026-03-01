@@ -8,7 +8,7 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 
 print("Loading dataset...")
 
-# 1. Load the Data (NOW WITH SILENCE!)
+# 1. Load the Data (4 Words including 'silence')
 words = ["open", "close", "stop", "silence"]
 X = []
 y = []
@@ -34,7 +34,7 @@ print(f"✅ Loaded {len(X)} total video examples!")
 # Split data: 80% for studying (train), 20% for the final exam (test)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# 2. Build the 3D Neural Network (Updated for 4 words)
+# 2. Build the 3D Neural Network (4 Output Neurons)
 class MiniLipNet(nn.Module):
     def __init__(self):
         super().__init__()
@@ -43,7 +43,7 @@ class MiniLipNet(nn.Module):
         self.conv2 = nn.Conv3d(8, 16, kernel_size=3, padding=1)
         self.pool2 = nn.MaxPool3d((2, 4, 4))
         self.fc1 = nn.Linear(16 * 7 * 6 * 6, 64)
-        self.fc2 = nn.Linear(64, 4) # NOW 4 OUTPUT NEURONS
+        self.fc2 = nn.Linear(64, 4) # 4 Classes
         self.relu = nn.ReLU()
 
     def forward(self, x):
@@ -66,18 +66,12 @@ def init_weights(m):
         if INIT_METHOD == "xavier":
             nn.init.xavier_uniform_(m.weight)
         elif INIT_METHOD == "heuristic":
-            # Kaiming (He) Initialization is best for ReLU activations
             nn.init.kaiming_uniform_(m.weight, nonlinearity='relu')
-        # 'general' just leaves PyTorch's default alone
         if m.bias is not None:
             nn.init.zeros_(m.bias)
 
 model.apply(init_weights)
 print(f"\n🧠 Applied '{INIT_METHOD.upper()}' weight initialization.")
-
-# Sample the initial weights of the very first math filter
-initial_weight_sample = model.conv1.weight[0][0][0][0].detach().numpy().copy()
-print(f"Initial Weight Sample: {initial_weight_sample}")
 
 # 4. Setup the AI's "Teacher"
 criterion = nn.CrossEntropyLoss()
@@ -86,12 +80,16 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 # 5. Train with Early Stopping
 print("\n🚀 Starting Training...\n")
 epochs = 100
-patience = 15 # Stop if it doesn't improve for 15 epochs
+patience = 15 
 best_loss = float('inf')
 patience_counter = 0
 
+# Ensure models directory exists
+os.makedirs("models", exist_ok=True)
+model_save_path = "models/lip_model.pth"
+
 for epoch in range(epochs):
-    model.train() # Study mode
+    model.train() 
     optimizer.zero_grad()    
     outputs = model(X_train)       
     loss = criterion(outputs, y_train) 
@@ -103,8 +101,8 @@ for epoch in range(epochs):
     if loss.item() < best_loss:
         best_loss = loss.item()
         patience_counter = 0
-        # Save the absolute best version of the brain
-        torch.save(model.state_dict(), "lip_model.pth")
+        # UPDATED: Save to models/ folder
+        torch.save(model.state_dict(), model_save_path)
     else:
         patience_counter += 1
         
@@ -117,29 +115,32 @@ for epoch in range(epochs):
 
 # 6. Evaluate the Model on the Test Set
 print("\n📊 TAKING THE FINAL EXAM (Test Set)...")
-model.load_state_dict(torch.load("lip_model.pth", weights_only=True)) # Load the best weights
-model.eval() # Testing mode
+# UPDATED: Load from models/ folder
+model.load_state_dict(torch.load(model_save_path, weights_only=True)) 
+model.eval() 
 
 with torch.no_grad():
     test_predictions = model(X_test)
     predicted_classes = torch.argmax(test_predictions, dim=1).numpy()
     true_classes = y_test.numpy()
 
-# Calculate Metrics 
+# Calculate Metrics
 accuracy = accuracy_score(true_classes, predicted_classes)
 precision = precision_score(true_classes, predicted_classes, average='weighted', zero_division=0)
 recall = recall_score(true_classes, predicted_classes, average='weighted', zero_division=0)
 f1 = f1_score(true_classes, predicted_classes, average='weighted', zero_division=0)
 kappa = cohen_kappa_score(true_classes, predicted_classes)
 
-print(f"Accuracy:  {accuracy * 100:.2f}%")
-print(f"Precision: {precision:.4f} (When it guesses a word, how often is it right?)")
-print(f"Recall:    {recall:.4f} (Out of all times you said a word, how many did it catch?)")
-print(f"F1 Score:  {f1:.4f} (Balance between Precision and Recall)")
-print(f"Kappa:     {kappa:.4f} (How much better the AI is than just randomly guessing)")
+# --- NEW: Save the metrics to a JSON file for the Web App ---
+import json
+metrics_data = {
+    "accuracy": round(accuracy * 100, 2),
+    "precision": round(precision, 4),
+    "recall": round(recall, 4),
+    "f1": round(f1, 4),
+    "kappa": round(kappa, 4)
+}
+with open("models/metrics.json", "w") as f:
+    json.dump(metrics_data, f)
 
-# Sample the final weights to see how they changed!
-final_weight_sample = model.conv1.weight[0][0][0][0].detach().numpy()
-print(f"\nFinal Weight Sample: {final_weight_sample}")
-print("Notice how the math actually shifted to learn your face!")
-print("\n🎉 Training Complete! Best model saved as 'lip_model.pth'")
+print(f"\n🎉 Training Complete! Metrics saved to 'models/metrics.json' and brain saved as '{model_save_path}'")

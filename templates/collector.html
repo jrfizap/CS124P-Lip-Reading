@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family: Arial; text-align: center; background: #222; color: white;">
+    <a href="/" style="color: #ccc; text-decoration: none;">&larr; Back to Home</a>
+    <h1>Data Collector</h1>
+    <img src="{{ url_for('video_feed_collector') }}" style="border: 3px solid #3498db; border-radius: 10px;">
+    <br><br>
+    <button onclick="saveWord('open')" style="padding: 10px; font-size: 1.2rem;">Say "Open"</button>
+    <button onclick="saveWord('close')" style="padding: 10px; font-size: 1.2rem;">Say "Close"</button>
+    <button onclick="saveWord('stop')" style="padding: 10px; font-size: 1.2rem;">Say "Stop"</button>
+    <button onclick="saveWord('silence')" style="padding: 10px; font-size: 1.2rem;">Silence (Still)</button>
+    <p id="status"></p>
+
+    <script>
+        function saveWord(word) {
+            fetch('/save_word/' + word, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => document.getElementById('status').innerText = data.message);
+        }
+    </script>
+</body>
+</html>

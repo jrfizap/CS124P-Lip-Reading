@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family: Arial; text-align: center; background: #222; color: white; padding-top: 50px;">
+    <a href="/" style="color: #ccc; text-decoration: none;">&larr; Back to Home</a>
+    <h1>📊 AI Brain Metrics</h1>
+    {% if metrics %}
+        <div style="background: #333; padding: 30px; display: inline-block; border-radius: 10px; text-align: left; font-size: 1.2rem;">
+            <p><strong>Accuracy:</strong> {{ metrics.accuracy }}%</p>
+            <p><strong>Precision:</strong> {{ metrics.precision }}</p>
+            <p><strong>Recall:</strong> {{ metrics.recall }}</p>
+            <p><strong>F1 Score:</strong> {{ metrics.f1 }}</p>
+            <p><strong>Kappa Score:</strong> {{ metrics.kappa }}</p>
+        </div>
+        <p style="color: #aaa; margin-top: 20px;">To improve these scores, collect more data and re-run train_model.py!</p>
+    {% else %}
+        <p style="color: #e74c3c;">No metrics found! Run the training script first.</p>
+    {% endif %}
+</body>
+</html>
