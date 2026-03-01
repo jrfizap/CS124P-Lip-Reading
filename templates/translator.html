@@ -1,8 +1,119 @@
 <!DOCTYPE html>
-<html>
-<body style="font-family: Arial; text-align: center; background: #222; color: white;">
-    <a href="/" style="color: #ccc; text-decoration: none;">&larr; Back to Home</a>
-    <h1>🤖 Live Translator</h1>
-    <img src="{{ url_for('video_feed_translator') }}" style="border: 3px solid #2ecc71; border-radius: 10px;">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live AI Translator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #ffffff;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; padding: 40px 20px; text-align: center;
+        }
+        .dashboard-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px; padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            max-width: 800px; width: 100%;
+        }
+        .header-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .back-btn { color: #a0aec0; text-decoration: none; font-size: 1rem; font-weight: 600; transition: color 0.3s ease; }
+        .back-btn:hover { color: #3498db; }
+        h1 { font-size: 2rem; font-weight: 700; }
+        
+        .status-badge {
+            display: inline-block;
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: 1px solid rgba(46, 204, 113, 0.5);
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.2);
+        }
+
+        .video-wrapper img {
+            width: 100%; max-width: 640px;
+            border-radius: 16px;
+            border: 2px solid #2ecc71;
+            box-shadow: 0 0 25px rgba(46, 204, 113, 0.3);
+            background-color: #000;
+        }
+
+        /* Vocabulary Reminder Styles */
+        .vocab-info {
+            margin-top: 25px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        .vocab-label {
+            font-size: 0.8rem;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .vocab-list {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .word-tag {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+        }
+
+        .instructions {
+            margin-top: 15px;
+            color: #bdc3c7;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <div class="header-nav">
+            <a href="/" class="back-btn">&larr; Back to Home</a>
+            <h1>🤖 Live Translator</h1>
+            <div style="width: 100px;"></div>
+        </div>
+        
+        <div class="status-badge">🟢 AI Engine Active</div>
+
+        <div class="video-wrapper">
+            <img src="{{ url_for('video_feed_translator') }}" alt="Live AI Feed">
+        </div>
+
+        <div class="vocab-info">
+            <div class="vocab-label">Supported Commands (3 Words)</div>
+            <div class="vocab-list">
+                <span class="word-tag">OPEN</span>
+                <span class="word-tag">CLOSE</span>
+                <span class="word-tag">STOP</span>
+            </div>
+        </div>
+
+        <p class="instructions">Look directly at the camera and mouth the words clearly.</p>
+    </div>
+
 </body>
 </html>

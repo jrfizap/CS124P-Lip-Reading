@@ -1,21 +1,103 @@
 <!DOCTYPE html>
-<html>
-<body style="font-family: Arial; text-align: center; background: #222; color: white;">
-    <a href="/" style="color: #ccc; text-decoration: none;">&larr; Back to Home</a>
-    <h1>Data Collector</h1>
-    <img src="{{ url_for('video_feed_collector') }}" style="border: 3px solid #3498db; border-radius: 10px;">
-    <br><br>
-    <button onclick="saveWord('open')" style="padding: 10px; font-size: 1.2rem;">Say "Open"</button>
-    <button onclick="saveWord('close')" style="padding: 10px; font-size: 1.2rem;">Say "Close"</button>
-    <button onclick="saveWord('stop')" style="padding: 10px; font-size: 1.2rem;">Say "Stop"</button>
-    <button onclick="saveWord('silence')" style="padding: 10px; font-size: 1.2rem;">Silence (Still)</button>
-    <p id="status"></p>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Collector</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #ffffff;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; padding: 40px 20px; text-align: center;
+        }
+        .dashboard-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px; padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            max-width: 800px; width: 100%;
+        }
+        .header-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .back-btn { color: #a0aec0; text-decoration: none; font-size: 1rem; font-weight: 600; transition: color 0.3s ease; }
+        .back-btn:hover { color: #3498db; }
+        h1 { font-size: 2rem; font-weight: 700; }
+        
+        .video-wrapper img {
+            width: 100%; max-width: 640px;
+            border-radius: 16px;
+            border: 2px solid rgba(52, 152, 219, 0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background-color: #000;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px; margin-top: 30px;
+        }
+
+        .record-btn {
+            padding: 15px; border: none; border-radius: 12px;
+            font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 1.1rem;
+            color: white; cursor: pointer; transition: all 0.2s ease;
+        }
+        .record-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.3); }
+        .record-btn:active { transform: translateY(1px); }
+
+        .btn-open { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .btn-close { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .btn-stop { background: linear-gradient(135deg, #f39c12, #d35400); }
+        .btn-silence { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
+
+        .status-box {
+            margin-top: 25px; min-height: 30px;
+            font-size: 1.1rem; font-weight: 600; color: #2ecc71;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <div class="header-nav">
+            <a href="/" class="back-btn">&larr; Back to Home</a>
+            <h1>🎥 Data Collector</h1>
+            <div style="width: 100px;"></div>
+        </div>
+
+        <div class="video-wrapper">
+            <img src="{{ url_for('video_feed_collector') }}" alt="Camera Feed">
+        </div>
+
+        <div class="controls-grid">
+            <button class="record-btn btn-open" onclick="saveWord('open')">Say "Open"</button>
+            <button class="record-btn btn-close" onclick="saveWord('close')">Say "Close"</button>
+            <button class="record-btn btn-stop" onclick="saveWord('stop')">Say "Stop"</button>
+            <button class="record-btn btn-silence" onclick="saveWord('silence')">Silence (Still)</button>
+        </div>
+
+        <div class="status-box" id="status">Waiting for input...</div>
+    </div>
 
     <script>
         function saveWord(word) {
+            document.getElementById('status').innerText = "Saving...";
+            document.getElementById('status').style.color = "#f1c40f"; // Yellow while saving
+            
             fetch('/save_word/' + word, { method: 'POST' })
             .then(response => response.json())
-            .then(data => document.getElementById('status').innerText = data.message);
+            .then(data => {
+                let statusEl = document.getElementById('status');
+                statusEl.innerText = data.message;
+                // Turn text red if warning, green if success
+                statusEl.style.color = data.message.includes("⚠️") ? "#e74c3c" : "#2ecc71";
+            });
         }
     </script>
 </body>

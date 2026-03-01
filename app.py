@@ -148,4 +148,4 @@ def save_word(word):
     return jsonify({"message": "⚠️ Buffer not full yet! Wait a second."})
 
 if __name__ == "__main__":
-    app.run(debug=True, threaded=False)
+    app.run(debug=True, threaded=True)
