@@ -7,8 +7,8 @@ import os
 import time
 from collections import deque
 
-# 1. Setup Folders for our 4 words (Added 'silence')
-words = ["open", "close", "stop", "silence"]
+# 1. Setup Folders for our 4 words (Updated to new vocabulary!)
+words = ["thank you", "hello", "goodbye", "silence"]
 for word in words:
     os.makedirs(f"dataset/{word}", exist_ok=True)
 
@@ -29,9 +29,9 @@ frame_buffer = deque(maxlen=SEQUENCE_LENGTH)
 cap = cv2.VideoCapture(0)
 print("\n--- LIP READING DATA COLLECTOR ---")
 print("Look at the camera and say the word (or sit still).")
-print("Press '1' right AFTER saying 'Open'")
-print("Press '2' right AFTER saying 'Close'")
-print("Press '3' right AFTER saying 'Stop'")
+print("Press '1' right AFTER saying 'Thank You'")
+print("Press '2' right AFTER saying 'Hello'")
+print("Press '3' right AFTER saying 'Goodbye'")
 print("Press '4' right AFTER sitting still for 'Silence'")
 print("Press 'q' to quit.\n")
 
@@ -70,7 +70,7 @@ while True:
     cv2.imshow("Main Camera", frame)
     key = cv2.waitKey(1) & 0xFF
 
-    # 4. Save the data if a key is pressed (Now includes '4')
+    # 4. Save the data if a key is pressed 
     if key in [ord('1'), ord('2'), ord('3'), ord('4')]:
         if len(frame_buffer) == SEQUENCE_LENGTH:
             video_sequence = np.array(frame_buffer)

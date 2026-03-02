@@ -34,7 +34,7 @@ class MiniLipNet(nn.Module):
         x = self.fc2(x)
         return x
 
-words = ["open", "close", "stop", "silence"]
+words = ["thank you", "hello", "goodbye", "silence"]
 model = MiniLipNet()
 try:
     model.load_state_dict(torch.load("models/lip_model.pth", weights_only=True))
