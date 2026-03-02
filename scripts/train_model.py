@@ -109,6 +109,8 @@ for epoch in range(MAX_EPOCHS):
         break
 
 # --- SAVE COMPARISON GRAPH ---
+os.makedirs("static", exist_ok=True) 
+
 plt.figure(figsize=(10, 5))
 plt.plot(train_losses, label='Training Loss', color='#3498db', linewidth=2)
 plt.plot(test_losses, label='Testing Loss', color='#e74c3c', linewidth=2, linestyle='--')
@@ -121,17 +123,25 @@ plt.savefig('static/loss_curve.png')
 plt.close()
 
 # --- EVALUATE & SAVE METADATA ---
-model.load_state_dict(torch.load("models/lip_model.pth"))
+model.load_state_dict(torch.load("models/lip_model.pth", weights_only=True))
 model.eval()
 with torch.no_grad():
     preds = torch.argmax(model(X_test), dim=1).numpy()
     true = y_test.numpy()
 
+# Calculate all metrics including Kappa
+accuracy = accuracy_score(true, preds)
+precision = precision_score(true, preds, average='weighted', zero_division=0)
+recall = recall_score(true, preds, average='weighted', zero_division=0)
+f1 = f1_score(true, preds, average='weighted', zero_division=0)
+kappa = cohen_kappa_score(true, preds)
+
 metrics_data = {
-    "accuracy": round(accuracy_score(true, preds) * 100, 2),
-    "precision": round(precision_score(true, preds, average='weighted', zero_division=0), 4),
-    "recall": round(recall_score(true, preds, average='weighted', zero_division=0), 4),
-    "f1": round(f1_score(true, preds, average='weighted', zero_division=0), 4),
+    "accuracy": round(accuracy * 100, 2),
+    "precision": round(precision, 4),
+    "recall": round(recall, 4),
+    "f1": round(f1, 4),
+    "kappa": round(kappa, 4),
     "config": {
         "split": "70% Training / 30% Testing",
         "weights": "Kaiming He (Heuristic)",
@@ -142,5 +152,3 @@ metrics_data = {
 
 with open("models/metrics.json", "w") as f:
     json.dump(metrics_data, f)
-
-print("\n✅ Done! Metadata and Graph saved.")

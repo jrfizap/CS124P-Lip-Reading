@@ -55,7 +55,7 @@
         /* The Info Block (NEW) */
         .info-block {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             margin-bottom: 30px;
             text-align: left;
             flex-wrap: wrap; 
@@ -63,7 +63,7 @@
 
         .info-card {
             flex: 1;
-            min-width: 200px;
+            min-width: 150px;
             background: rgba(0, 0, 0, 0.15);
             padding: 20px;
             border-radius: 16px;
@@ -165,6 +165,10 @@
                     <p>{{ metrics.config.weights }}</p>
                 </div>
                 <div class="info-card">
+                    <h3 style="color: #9b59b6;">Optimizer</h3>
+                    <p>{{ metrics.config.optimizer }}</p>
+                </div>
+                <div class="info-card">
                     <h3 style="color: #2ecc71;">Epochs Run</h3>
                     <p>{{ metrics.config.epochs }}</p>
                 </div>
@@ -195,7 +199,7 @@
 
             <div class="graph-container">
                 <h2>Learning vs. Testing Plateau</h2>
-                <img src="{{ url_for('static', filename='loss_curve.png') }}" alt="AI Learning Curve">
+                <img src="{{ url_for('static', filename='loss_curve.png') }}?v={{ metrics.accuracy }}" alt="AI Learning Curve">
             </div>
 
             <p class="footer-note">To improve these scores, collect more varying lighting/angles and re-run the training script!</p>

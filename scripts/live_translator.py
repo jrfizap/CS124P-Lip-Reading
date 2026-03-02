@@ -3,36 +3,55 @@ import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import numpy as np
-import os
-import time
+import torch
+import torch.nn as nn
 from collections import deque
 
-# --- UPDATED FOLDERS ---
+class MiniLipNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv3d(1, 8, kernel_size=3, padding=1)
+        self.pool1 = nn.MaxPool3d((2, 4, 4))
+        self.conv2 = nn.Conv3d(8, 16, kernel_size=3, padding=1)
+        self.pool2 = nn.MaxPool3d((2, 4, 4))
+        self.fc1 = nn.Linear(16 * 7 * 6 * 6, 64)
+        self.fc2 = nn.Linear(64, 4) 
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        x = self.relu(self.conv1(x))
+        x = self.pool1(x)
+        x = self.relu(self.conv2(x))
+        x = self.pool2(x)
+        x = x.view(x.size(0), -1)
+        x = self.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+
+print("Waking up the AI Brain...")
 words = ["thank you", "hello", "goodbye", "silence"]
-for word in words:
-    os.makedirs(f"dataset/{word}", exist_ok=True)
+model = MiniLipNet()
+model.load_state_dict(torch.load("models/lip_model.pth", weights_only=True))
+model.eval() 
 
 model_path = 'models/face_landmarker.task'
 base_options = python.BaseOptions(model_asset_path=model_path)
-options = vision.FaceLandmarkerOptions(
-    base_options=base_options,
-    num_faces=1,
-    running_mode=vision.RunningMode.IMAGE
-)
+options = vision.FaceLandmarkerOptions(base_options=base_options, num_faces=1, running_mode=vision.RunningMode.IMAGE)
 detector = vision.FaceLandmarker.create_from_options(options)
 
 SEQUENCE_LENGTH = 29
 frame_buffer = deque(maxlen=SEQUENCE_LENGTH)
+current_prediction = ""
+display_timer = 0 
+
+# --- NEW: CONFIDENCE THRESHOLD ---
+# The AI must be at least this sure to display a word.
+CONFIDENCE_THRESHOLD = 0.75 
 
 cap = cv2.VideoCapture(0)
-print("\n--- LIP READING DATA COLLECTOR ---")
-print("Look at the camera and say the word (or sit still).")
-# --- UPDATED PROMPTS ---
-print("Press '1' right AFTER saying 'Thank You'")
-print("Press '2' right AFTER saying 'Hello'")
-print("Press '3' right AFTER saying 'Goodbye'")
-print("Press '4' right AFTER sitting still for 'Silence'")
-print("Press 'q' to quit.\n")
+print("\n🎤 HANDS-FREE LIVE LIP READER READY!")
+print("Just look at the camera and mouth your words.")
+print("Press 'q' to quit.")
 
 while True:
     ret, frame = cap.read()
@@ -64,31 +83,49 @@ while True:
             lips_resized = cv2.resize(lips_gray, (96, 96))
             lips_normalized = lips_resized / 255.0
             frame_buffer.append(lips_normalized)
-            cv2.imshow("Extracted Lips", lips_resized)
+            cv2.imshow("AI Vision", lips_resized)
+
+    if len(frame_buffer) == SEQUENCE_LENGTH:
+        input_data = np.array(frame_buffer)
+        input_data = np.expand_dims(input_data, axis=0) 
+        input_data = np.expand_dims(input_data, axis=0) 
+        
+        input_tensor = torch.tensor(input_data, dtype=torch.float32)
+        
+        with torch.no_grad():
+            prediction = model(input_tensor)
+            
+            # --- NEW: CALCULATE CONFIDENCE PERCENTAGE ---
+            probabilities = torch.softmax(prediction, dim=1)
+            max_prob, best_guess_index = torch.max(probabilities, dim=1)
+            
+            confidence = max_prob.item()
+            predicted_word = words[best_guess_index.item()]
+            
+            # FILTER OUT LOW CONFIDENCE GUESSES
+            if confidence < CONFIDENCE_THRESHOLD:
+                predicted_word = "silence" # Fallback to silence if unsure
+            
+            if predicted_word == "silence":
+                display_timer = 0
+            else:
+                # Show the percentage on screen!
+                current_prediction = f"{predicted_word.upper()} ({confidence*100:.1f}%)"
+                display_timer = 40 
+            
+        frame_buffer.clear() 
+
+    if display_timer > 0:
+        cv2.putText(frame, current_prediction, (30, 50), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
+        display_timer -= 1
+    else:
+        cv2.putText(frame, "Listening...", (30, 50), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200, 200, 200), 2)
 
     cv2.imshow("Main Camera", frame)
-    key = cv2.waitKey(1) & 0xFF
-
-    if key in [ord('1'), ord('2'), ord('3'), ord('4')]:
-        if len(frame_buffer) == SEQUENCE_LENGTH:
-            video_sequence = np.array(frame_buffer)
-            
-            if key == ord('1'): word_idx = 0
-            elif key == ord('2'): word_idx = 1
-            elif key == ord('3'): word_idx = 2
-            elif key == ord('4'): word_idx = 3
-            
-            target_word = words[word_idx]
-            
-            filename = f"dataset/{target_word}/{target_word}_{int(time.time())}.npy"
-            np.save(filename, video_sequence)
-            
-            print(f"✅ Saved 1 example for: {target_word.upper()}")
-            frame_buffer.clear() 
-        else:
-            print(f"Buffer not full! Wait a second before pressing.")
-
-    elif key == ord('q'):
+    
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
 cap.release()
