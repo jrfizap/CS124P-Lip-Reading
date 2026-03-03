@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 from collections import deque
 
+# 1. The Brain Structure
 class MiniLipNet(nn.Module):
     def __init__(self):
         super().__init__()
@@ -15,7 +16,7 @@ class MiniLipNet(nn.Module):
         self.conv2 = nn.Conv3d(8, 16, kernel_size=3, padding=1)
         self.pool2 = nn.MaxPool3d((2, 4, 4))
         self.fc1 = nn.Linear(16 * 7 * 6 * 6, 64)
-        self.fc2 = nn.Linear(64, 4) 
+        self.fc2 = nn.Linear(64, 3)
         self.relu = nn.ReLU()
 
     def forward(self, x):
@@ -28,25 +29,26 @@ class MiniLipNet(nn.Module):
         x = self.fc2(x)
         return x
 
+# 2. Wake up the AI
 print("Waking up the AI Brain...")
-words = ["thank you", "hello", "goodbye", "silence"]
+words = ["open", "close", "stop"]
 model = MiniLipNet()
-model.load_state_dict(torch.load("models/lip_model.pth", weights_only=True))
+model.load_state_dict(torch.load("lip_model.pth", weights_only=True))
 model.eval() 
 
+# 3. Setup MediaPipe
 model_path = 'models/face_landmarker.task'
 base_options = python.BaseOptions(model_asset_path=model_path)
 options = vision.FaceLandmarkerOptions(base_options=base_options, num_faces=1, running_mode=vision.RunningMode.IMAGE)
 detector = vision.FaceLandmarker.create_from_options(options)
 
+# 4. Setup Live Stream Variables
 SEQUENCE_LENGTH = 29
 frame_buffer = deque(maxlen=SEQUENCE_LENGTH)
+
+# Variables to keep the text on the screen for a moment
 current_prediction = ""
 display_timer = 0 
-
-# --- NEW: CONFIDENCE THRESHOLD ---
-# The AI must be at least this sure to display a word.
-CONFIDENCE_THRESHOLD = 0.75 
 
 cap = cv2.VideoCapture(0)
 print("\n🎤 HANDS-FREE LIVE LIP READER READY!")
@@ -85,6 +87,7 @@ while True:
             frame_buffer.append(lips_normalized)
             cv2.imshow("AI Vision", lips_resized)
 
+    # 5. The Automatic Trigger (No Spacebar Needed!)
     if len(frame_buffer) == SEQUENCE_LENGTH:
         input_data = np.array(frame_buffer)
         input_data = np.expand_dims(input_data, axis=0) 
@@ -94,34 +97,20 @@ while True:
         
         with torch.no_grad():
             prediction = model(input_tensor)
+            best_guess_index = torch.argmax(prediction).item()
+            current_prediction = words[best_guess_index].upper()
             
-            # --- NEW: CALCULATE CONFIDENCE PERCENTAGE ---
-            probabilities = torch.softmax(prediction, dim=1)
-            max_prob, best_guess_index = torch.max(probabilities, dim=1)
+            # Set the timer so the text stays on screen for ~40 frames
+            display_timer = 40 
             
-            confidence = max_prob.item()
-            predicted_word = words[best_guess_index.item()]
-            
-            # FILTER OUT LOW CONFIDENCE GUESSES
-            if confidence < CONFIDENCE_THRESHOLD:
-                predicted_word = "silence" # Fallback to silence if unsure
-            
-            if predicted_word == "silence":
-                display_timer = 0
-            else:
-                # Show the percentage on screen!
-                current_prediction = f"{predicted_word.upper()} ({confidence*100:.1f}%)"
-                display_timer = 40 
-            
+        # Instantly clear the buffer to start listening for the next word
         frame_buffer.clear() 
 
+    # 6. Draw the AI's guess on the screen
     if display_timer > 0:
-        cv2.putText(frame, current_prediction, (30, 50), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
+        cv2.putText(frame, f"AI Hears: {current_prediction}", (30, 50), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
         display_timer -= 1
-    else:
-        cv2.putText(frame, "Listening...", (30, 50), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200, 200, 200), 2)
 
     cv2.imshow("Main Camera", frame)
     
