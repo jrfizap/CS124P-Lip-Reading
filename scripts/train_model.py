@@ -3,6 +3,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import matplotlib.pyplot as plt
+import json
 
 print("Loading dataset...")
 
@@ -72,6 +74,7 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 # 4. Train the AI!
 print("\n🧠 Starting Training...\n")
 epochs = 25
+train_losses = [] # NEW: We will store the error history here!
 
 for epoch in range(epochs):
     optimizer.zero_grad()    # Clear old guesses
@@ -81,8 +84,42 @@ for epoch in range(epochs):
     loss.backward()          # Calculate how to fix the mistakes
     optimizer.step()         # Adjust the brain weights
     
+    train_losses.append(loss.item()) # Save the error for our graph
     print(f"Epoch {epoch+1}/{epochs} | Error (Loss): {loss.item():.4f}")
 
-# 5. Save the Brain
+# 5. Save the Graph
+os.makedirs("static", exist_ok=True) 
+plt.figure(figsize=(10, 5))
+plt.plot(train_losses, label='Training Loss', color='#3498db', linewidth=2)
+plt.title('Training Loss Plateau')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.savefig('static/loss_curve.png')
+plt.close()
+
+# 6. Save the Brain
+os.makedirs("models", exist_ok=True)
 torch.save(model.state_dict(), "models/lip_model.pth")
-print("\n🎉 Training Complete! Model saved as 'lip_model.pth'")
+print("\n🎉 Training Complete! Model saved as 'models/lip_model.pth'")
+print("📈 Graph saved as 'static/loss_curve.png'")
+
+# 7. Extract Training Metrics for the Web Dashboard
+with torch.no_grad():
+    preds = torch.argmax(model(X), dim=1)
+    correct_guesses = (preds == y).sum().item()
+    training_accuracy = (correct_guesses / len(y)) * 100
+
+metrics_data = {
+    "accuracy": round(training_accuracy, 2),
+    "config": {
+        "split": "100% Training",
+        "weights": "PyTorch Default",
+        "epochs": epochs,
+        "optimizer": "Adam (LR=0.001)"
+    }
+}
+
+with open("models/metrics.json", "w") as f:
+    json.dump(metrics_data, f)

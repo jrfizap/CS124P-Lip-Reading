@@ -52,7 +52,7 @@
 
         h1 { font-size: 2rem; font-weight: 700; letter-spacing: 1px; }
 
-        /* The Info Block (NEW) */
+        /* The Info Block */
         .info-block {
             display: flex;
             gap: 15px;
@@ -83,17 +83,16 @@
             color: #ecf0f1;
         }
 
-        /* The Metrics Grid */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 20px;
+        /* The Centered Hero Metric */
+        .hero-metric-container {
+            display: flex;
+            justify-content: center;
             margin-bottom: 40px;
         }
 
         .metric-card {
             background: rgba(0, 0, 0, 0.2);
-            padding: 20px;
+            padding: 30px 60px;
             border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.05);
             transition: transform 0.3s ease;
@@ -102,15 +101,15 @@
         .metric-card:hover { transform: translateY(-5px); }
 
         .metric-title {
-            font-size: 0.9rem;
+            font-size: 1rem;
             color: #a0aec0;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
         }
 
         .metric-value {
-            font-size: 1.8rem;
+            font-size: 3rem;
             font-weight: 700;
             color: #2ecc71; 
         }
@@ -174,31 +173,15 @@
                 </div>
             </div>
 
-            <div class="metrics-grid">
+            <div class="hero-metric-container">
                 <div class="metric-card">
-                    <div class="metric-title">Accuracy</div>
+                    <div class="metric-title">Training Accuracy</div>
                     <div class="metric-value">{{ metrics.accuracy }}%</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-title">Precision</div>
-                    <div class="metric-value" style="color: #3498db;">{{ metrics.precision }}</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-title">Recall</div>
-                    <div class="metric-value" style="color: #f1c40f;">{{ metrics.recall }}</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-title">F1 Score</div>
-                    <div class="metric-value" style="color: #9b59b6;">{{ metrics.f1 }}</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-title">Kappa</div>
-                    <div class="metric-value" style="color: #e67e22;">{{ metrics.kappa }}</div>
                 </div>
             </div>
 
             <div class="graph-container">
-                <h2>Learning vs. Testing Plateau</h2>
+                <h2>Training Loss Plateau</h2>
                 <img src="{{ url_for('static', filename='loss_curve.png') }}?v={{ metrics.accuracy }}" alt="AI Learning Curve">
             </div>
 

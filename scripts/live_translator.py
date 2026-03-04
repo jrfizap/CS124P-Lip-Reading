@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 from collections import deque
 
-# 1. The Brain Structure
+# 1. We have to define the exact same Brain structure so PyTorch knows how to load the weights
 class MiniLipNet(nn.Module):
     def __init__(self):
         super().__init__()
@@ -29,30 +29,27 @@ class MiniLipNet(nn.Module):
         x = self.fc2(x)
         return x
 
-# 2. Wake up the AI
+# 2. Wake up the AI and load your trained weights
 print("Waking up the AI Brain...")
 words = ["open", "close", "stop"]
 model = MiniLipNet()
-model.load_state_dict(torch.load("lip_model.pth", weights_only=True))
-model.eval() 
+# Load the file you just created!
+model.load_state_dict(torch.load("models/lip_model.pth", weights_only=True))
+model.eval() # Tell the AI it is time to take the test, not study
 
-# 3. Setup MediaPipe
+# 3. Setup MediaPipe (The Eyes)
 model_path = 'models/face_landmarker.task'
 base_options = python.BaseOptions(model_asset_path=model_path)
 options = vision.FaceLandmarkerOptions(base_options=base_options, num_faces=1, running_mode=vision.RunningMode.IMAGE)
 detector = vision.FaceLandmarker.create_from_options(options)
 
-# 4. Setup Live Stream Variables
+# 4. Start the Live Stream
 SEQUENCE_LENGTH = 29
 frame_buffer = deque(maxlen=SEQUENCE_LENGTH)
 
-# Variables to keep the text on the screen for a moment
-current_prediction = ""
-display_timer = 0 
-
 cap = cv2.VideoCapture(0)
-print("\n🎤 HANDS-FREE LIVE LIP READER READY!")
-print("Just look at the camera and mouth your words.")
+print("\n🎤 LIVE LIP READER READY!")
+print("Look at the camera, say ONE of your 3 words, and immediately hit SPACEBAR.")
 print("Press 'q' to quit.")
 
 while True:
@@ -87,34 +84,36 @@ while True:
             frame_buffer.append(lips_normalized)
             cv2.imshow("AI Vision", lips_resized)
 
-    # 5. The Automatic Trigger (No Spacebar Needed!)
-    if len(frame_buffer) == SEQUENCE_LENGTH:
-        input_data = np.array(frame_buffer)
-        input_data = np.expand_dims(input_data, axis=0) 
-        input_data = np.expand_dims(input_data, axis=0) 
-        
-        input_tensor = torch.tensor(input_data, dtype=torch.float32)
-        
-        with torch.no_grad():
-            prediction = model(input_tensor)
-            best_guess_index = torch.argmax(prediction).item()
-            current_prediction = words[best_guess_index].upper()
-            
-            # Set the timer so the text stays on screen for ~40 frames
-            display_timer = 40 
-            
-        # Instantly clear the buffer to start listening for the next word
-        frame_buffer.clear() 
-
-    # 6. Draw the AI's guess on the screen
-    if display_timer > 0:
-        cv2.putText(frame, f"AI Hears: {current_prediction}", (30, 50), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
-        display_timer -= 1
-
     cv2.imshow("Main Camera", frame)
-    
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    key = cv2.waitKey(1) & 0xFF
+
+    # 5. The Moment of Truth!
+    if key == ord(' '):
+        if len(frame_buffer) == SEQUENCE_LENGTH:
+            # Package the 29 frames for PyTorch (Add Channel and Batch dimensions)
+            # Shape becomes: (1 Batch, 1 Channel, 29 Frames, 96 Height, 96 Width)
+            input_data = np.array(frame_buffer)
+            input_data = np.expand_dims(input_data, axis=0) 
+            input_data = np.expand_dims(input_data, axis=0) 
+            
+            # Convert to PyTorch Math
+            input_tensor = torch.tensor(input_data, dtype=torch.float32)
+            
+            # Ask the AI to guess!
+            with torch.no_grad(): # Don't train, just guess
+                prediction = model(input_tensor)
+                
+                # Find the word with the highest score
+                best_guess_index = torch.argmax(prediction).item()
+                predicted_word = words[best_guess_index]
+                
+                print(f"\n🤖 AI Says you said: >>> {predicted_word.upper()} <<<")
+                
+            frame_buffer.clear() # Clear the buffer for the next word
+        else:
+            print("Buffer not full yet!")
+            
+    elif key == ord('q'):
         break
 
 cap.release()

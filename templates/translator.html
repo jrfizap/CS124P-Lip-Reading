@@ -86,6 +86,27 @@
             font-size: 0.9rem;
             font-style: italic;
         }
+
+        /* NEW BUTTON STYLES */
+        .translate-btn {
+            margin-top: 20px;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+            transition: all 0.2s;
+        }
+        .translate-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(52, 152, 219, 0.6); }
+        .translate-btn:active:not(:disabled) { transform: translateY(1px); }
+        .translate-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+
+        #translation-result { margin-top: 15px; font-size: 1.5rem; font-weight: 700; color: #f1c40f; min-height: 35px; }
     </style>
 </head>
 <body>
@@ -103,17 +124,65 @@
             <img src="{{ url_for('video_feed_translator') }}" alt="Live AI Feed">
         </div>
 
+        <button class="translate-btn" id="trans-btn" onclick="triggerTranslation()">🔍 Translate (Hit Spacebar)</button>
+        <div id="translation-result">Say your word, then press Spacebar!</div>
+
         <div class="vocab-info">
             <div class="vocab-label">Supported Commands (3 Words)</div>
             <div class="vocab-list">
-                <span class="word-tag">THANK YOU</span>
-                <span class="word-tag">HELLO</span>
-                <span class="word-tag">GOODBYE</span>
+                <span class="word-tag">OPEN</span>
+                <span class="word-tag">CLOSE</span>
+                <span class="word-tag">STOP</span>
             </div>
         </div>
 
         <p class="instructions">Look directly at the camera and mouth the words clearly.</p>
     </div>
 
+    <script>
+        function triggerTranslation() {
+            let btn = document.getElementById("trans-btn");
+            let resultBox = document.getElementById("translation-result");
+
+            if (btn.disabled) return; // Prevent spam-clicking
+
+            // Show loading state
+            btn.disabled = true;
+            btn.innerText = "🧠 Analyzing...";
+            resultBox.innerText = "Grading the last second of video...";
+            resultBox.style.color = "#f1c40f"; // Yellow
+
+            fetch('/manual_translate', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerText = "🔍 Translate (Hit Spacebar)";
+
+                if (data.word === "buffer_empty" || data.word === "timeout") {
+                    resultBox.innerText = "Buffer empty! Wait 1 second and try again.";
+                    resultBox.style.color = "#e74c3c"; // Red
+                } else {
+                    // Display the AI's guess natively in the HTML!
+                    resultBox.innerText = `🤖 AI Says you said: >>> ${data.word.toUpperCase()} <<<`;
+                    resultBox.style.color = "#2ecc71"; // Green
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerText = "🔍 Translate (Hit Spacebar)";
+                resultBox.innerText = "Error communicating with AI.";
+                resultBox.style.color = "#e74c3c";
+            });
+        }
+
+        // --- NEW: SPACEBAR LISTENER ---
+        document.addEventListener('keydown', function(event) {
+            // Check if the pressed key is the Spacebar (Key code 32 or key ' ')
+            if (event.code === 'Space' || event.key === ' ') {
+                event.preventDefault(); // Stop the spacebar from scrolling the page down
+                triggerTranslation();
+            }
+        });
+    </script>
 </body>
 </html>
