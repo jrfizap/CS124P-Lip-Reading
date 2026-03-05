@@ -29,3 +29,12 @@ Because AI models are highly sensitive to individual facial structures and light
 ```bash
 git clone [https://github.com/YourUsername/YourRepoName.git](https://github.com/YourUsername/YourRepoName.git)
 cd YourRepoName
+
+### 2. Create a Virtual Environment (Recommended)
+It is highly recommended to isolate your dependencies.
+```bash
+python -m venv venv
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
