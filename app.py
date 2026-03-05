@@ -8,12 +8,15 @@ import torch
 import torch.nn as nn
 from collections import deque
 import os
+import json
+import time
 
 app = Flask(__name__)
 
 # --- BULLETPROOF PATHING ---
 script_dir = os.path.dirname(os.path.abspath(__file__))
 models_dir = os.path.join(script_dir, "models")
+dataset_dir = os.path.join(script_dir, "dataset")
 
 # --- 1. SETUP AI BRAIN (3 Neurons) ---
 class MiniLipNet(nn.Module):
@@ -57,8 +60,8 @@ detector = vision.FaceLandmarker.create_from_options(options)
 SEQUENCE_LENGTH = 29
 global_frame_buffer = deque(maxlen=SEQUENCE_LENGTH)
 
-# --- 4. VIDEO GENERATOR ---
-def generate_frames():
+# --- 4. VIDEO GENERATOR (Handles both Collector and Translator UI) ---
+def generate_frames(mode="translator"):
     cap = cv2.VideoCapture(0)
     try: 
         while True:
@@ -89,6 +92,12 @@ def generate_frames():
                     lips_resized = cv2.resize(lips_gray, (96, 96))
                     global_frame_buffer.append(lips_resized / 255.0)
 
+            # Draw different UI text depending on which webpage is watching
+            if mode == "collector":
+                buffer_status = f"Buffer: {len(global_frame_buffer)}/{SEQUENCE_LENGTH}"
+                color = (0, 255, 0) if len(global_frame_buffer) == SEQUENCE_LENGTH else (0, 0, 255)
+                cv2.putText(frame, buffer_status, (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, 2)
+            
             # Send the frame to the webpage
             ret, buffer = cv2.imencode('.jpg', frame)
             yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
@@ -97,14 +106,53 @@ def generate_frames():
         cap.release()
 
 # --- 5. ROUTES ---
+
+# THIS IS THE FIX: The root route now points to home.html
 @app.route('/')
-def home(): return render_template('translator.html') # Defaulting straight to the translator for now
+def home(): 
+    return render_template('home.html') 
+
+@app.route('/collector')
+def collector(): 
+    return render_template('collector.html')
+
+@app.route('/results')
+def results():
+    metrics = None
+    metrics_path = os.path.join(models_dir, "metrics.json")
+    if os.path.exists(metrics_path):
+        with open(metrics_path, "r") as f:
+            metrics = json.load(f)
+    return render_template('results.html', metrics=metrics)
+
+@app.route('/translator')
+def translator(): 
+    return render_template('translator.html')
+
+# Separate video feeds so the camera behaves differently on each page
+@app.route('/video_feed_collector')
+def video_feed_collector(): 
+    return Response(generate_frames(mode="collector"), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/video_feed_translator')
 def video_feed_translator(): 
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(generate_frames(mode="translator"), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-# --- 6. TRANSLATOR ENDPOINT (Triggered by HTML Spacebar) ---
+# --- 6. DATA COLLECTOR ENDPOINT ---
+@app.route('/save_word/<word>', methods=['POST'])
+def save_word(word):
+    if len(global_frame_buffer) == SEQUENCE_LENGTH:
+        word_dir = os.path.join(dataset_dir, word)
+        os.makedirs(word_dir, exist_ok=True)
+        filename = os.path.join(word_dir, f"{word}_{int(time.time())}.npy")
+        
+        np.save(filename, np.array(global_frame_buffer))
+        global_frame_buffer.clear()
+        return jsonify({"message": f"✅ Saved 1 example for {word.upper()}!"})
+        
+    return jsonify({"message": "⚠️ Buffer not full yet! Wait a second."})
+
+# --- 7. TRANSLATOR ENDPOINT (Triggered by HTML Spacebar) ---
 @app.route('/manual_translate', methods=['POST'])
 def manual_translate():
     if len(global_frame_buffer) == SEQUENCE_LENGTH:
