@@ -1,102 +1,133 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Collector</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            color: #ffffff;
-            display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; padding: 40px 20px; text-align: center;
-        }
-        .dashboard-container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px; padding: 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            max-width: 800px; width: 100%;
-        }
-        .header-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .back-btn { color: #a0aec0; text-decoration: none; font-size: 1rem; font-weight: 600; transition: color 0.3s ease; }
-        .back-btn:hover { color: #3498db; }
-        h1 { font-size: 2rem; font-weight: 700; }
-        
-        .video-wrapper img {
-            width: 100%; max-width: 640px;
-            border-radius: 16px;
-            border: 2px solid rgba(52, 152, 219, 0.5);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            background-color: #000;
-        }
+{% extends "base.html" %}
 
-        .controls-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 15px; margin-top: 30px;
-        }
+{% block title %}Data Collector | AI Lip Reading{% endblock %}
 
-        .record-btn {
-            padding: 15px; border: none; border-radius: 12px;
-            font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 1.1rem;
-            color: white; cursor: pointer; transition: all 0.2s ease;
-        }
-        .record-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.3); }
-        .record-btn:active { transform: translateY(1px); }
+{% block extra_css %}
+<style>
+    /* Specific styles for the Collector Page */
+    .controls-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 16px; 
+    }
 
-        .btn-open { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-        .btn-close { background: linear-gradient(135deg, #3498db, #2980b9); }
-        .btn-stop { background: linear-gradient(135deg, #f39c12, #d35400); }
+    .record-btn {
+        padding: 14px 20px; 
+        background-color: var(--card-bg);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        font-family: 'Poppins', sans-serif; 
+        font-weight: 500; 
+        font-size: 1rem;
+        cursor: pointer; 
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
 
-        .status-box {
-            margin-top: 25px; min-height: 30px;
-            font-size: 1.1rem; font-weight: 600; color: #2ecc71;
-            letter-spacing: 0.5px;
-        }
-    </style>
-</head>
-<body>
+    .record-btn:hover { 
+        border-color: var(--accent-blue);
+        background-color: #eff6ff;
+        color: var(--accent-blue);
+        transform: translateY(-2px); 
+        box-shadow: 0 6px 12px rgba(37, 99, 235, 0.08);
+    }
 
-    <div class="dashboard-container">
-        <div class="header-nav">
-            <a href="/" class="back-btn">&larr; Back to Home</a>
-            <h1>🎥 Data Collector</h1>
-            <div style="width: 100px;"></div>
-        </div>
+    .record-btn:active { 
+        transform: translateY(0); 
+    }
 
-        <div class="video-wrapper">
-            <img src="{{ url_for('video_feed_collector') }}" alt="Camera Feed">
-        </div>
+    .status-box {
+        margin-top: 24px; 
+        padding: 14px;
+        border-radius: 8px;
+        background-color: #f1f5f9;
+        border: 1px solid var(--border-color);
+        font-size: 0.95rem; 
+        font-weight: 500; 
+        color: var(--text-muted);
+        transition: all 0.3s ease;
+    }
 
-        <div class="controls-grid">
-            <button class="record-btn btn-open" onclick="saveWord('open')">Say "Open"</button>
-            <button class="record-btn btn-close" onclick="saveWord('close')">Say "Close"</button>
-            <button class="record-btn btn-stop" onclick="saveWord('stop')">Say "Stop"</button>
-        </div>
+    /* JavaScript applied state classes */
+    .status-saving {
+        background-color: #fffbeb;
+        border-color: #fde68a;
+        color: #b45309;
+    }
 
-        <div class="status-box" id="status">Waiting for input...</div>
+    .status-success {
+        background-color: #eff6ff;
+        border-color: #bfdbfe;
+        color: var(--accent-blue);
+    }
+
+    .status-error {
+        background-color: #fef2f2;
+        border-color: #fecaca;
+        color: #b91c1c;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="header-nav">
+        <a href="/" class="back-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+        </a>
+        <h1 style="font-size: 1.6rem;">Data Collector</h1>
+        <div style="width: 100px;"></div> </div>
+
+    <div class="video-wrapper">
+        <img src="{{ url_for('video_feed_collector') }}" alt="Live Camera Feed">
     </div>
+
+    <div class="controls-grid">
+        <button class="record-btn" onclick="saveWord('open')">Record "Open"</button>
+        <button class="record-btn" onclick="saveWord('close')">Record "Close"</button>
+        <button class="record-btn" onclick="saveWord('stop')">Record "Stop"</button>
+    </div>
+
+    <div class="status-box" id="status">Awaiting input...</div>
 
     <script>
         function saveWord(word) {
-            document.getElementById('status').innerText = "Saving...";
-            document.getElementById('status').style.color = "#f1c40f"; // Yellow while saving
+            let statusEl = document.getElementById('status');
+            
+            // Set intermediate saving state
+            statusEl.innerText = "Processing buffer...";
+            statusEl.className = "status-box status-saving";
             
             fetch('/save_word/' + word, { method: 'POST' })
             .then(response => response.json())
             .then(data => {
-                let statusEl = document.getElementById('status');
-                statusEl.innerText = data.message;
-                // Turn text red if warning, green if success
-                statusEl.style.color = data.message.includes("⚠️") ? "#e74c3c" : "#2ecc71";
+                // Strip emojis sent from the Python backend for a cleaner UI
+                let cleanMessage = data.message.replace('✅', '').replace('⚠️', '').trim();
+                statusEl.innerText = cleanMessage;
+                
+                // Apply appropriate corporate styling based on the message content
+                if (data.message.includes("⚠️")) {
+                    statusEl.className = "status-box status-error";
+                } else {
+                    statusEl.className = "status-box status-success";
+                }
+                
+                // Revert to default state after 3 seconds
+                setTimeout(() => {
+                    if(statusEl.innerText === cleanMessage) {
+                        statusEl.innerText = "Awaiting input...";
+                        statusEl.className = "status-box";
+                    }
+                }, 3000);
+            })
+            .catch(error => {
+                statusEl.innerText = "Network connection error.";
+                statusEl.className = "status-box status-error";
             });
         }
     </script>
-</body>
-</html>
+{% endblock %}

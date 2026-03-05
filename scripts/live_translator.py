@@ -48,7 +48,7 @@ SEQUENCE_LENGTH = 29
 frame_buffer = deque(maxlen=SEQUENCE_LENGTH)
 
 cap = cv2.VideoCapture(0)
-print("\n🎤 LIVE LIP READER READY!")
+print("\nLIVE LIP READER READY!")
 print("Look at the camera, say ONE of your 3 words, and immediately hit SPACEBAR.")
 print("Press 'q' to quit.")
 
@@ -107,7 +107,7 @@ while True:
                 best_guess_index = torch.argmax(prediction).item()
                 predicted_word = words[best_guess_index]
                 
-                print(f"\n🤖 AI Says you said: >>> {predicted_word.upper()} <<<")
+                print(f"\nThe Model predicts you said: >>> {predicted_word.upper()} <<<")
                 
             frame_buffer.clear() # Clear the buffer for the next word
         else:

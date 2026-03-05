@@ -1,122 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Lip Reading Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+{% extends "base.html" %}
+
+{% block title %}Home | AI Lip Reading{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Only styles that are EXCLUSIVE to the home page go here */
+    .dashboard-container { max-width: 480px; }
+    .header-section { margin-bottom: 35px; }
+    p.subtitle { color: var(--text-muted); font-size: 0.95rem; font-weight: 400; }
+    .btn-container { display: flex; flex-direction: column; gap: 16px; }
     
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
-        body {
-            font-family: 'Poppins', sans-serif;
-            /* Sleek dark gradient background */
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            text-align: center;
-        }
+    .action-btn {
+        display: flex; align-items: center; justify-content: flex-start;
+        padding: 16px 24px; background-color: var(--card-bg); color: var(--text-main);
+        text-decoration: none; border: 1px solid var(--border-color);
+        border-radius: 12px; font-size: 1.05rem; font-weight: 500;
+        transition: all 0.2s ease-in-out; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+    .action-btn:hover {
+        border-color: var(--accent-blue); background-color: #eff6ff;
+        color: var(--accent-blue); transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(37, 99, 235, 0.08);
+    }
+    .icon { width: 24px; height: 24px; margin-right: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .step-label { margin-right: 12px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); background: #f1f5f9; padding: 4px 8px; border-radius: 6px; transition: all 0.2s ease; }
+    .action-btn:hover .step-label { background: var(--accent-blue); color: #ffffff; }
+</style>
+{% endblock %}
 
-        /* Glassmorphism Card Effect */
-        .dashboard-container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            padding: 50px 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            max-width: 500px;
-            width: 90%;
-        }
-
-        h1 {
-            font-size: 2.2rem;
-            margin-bottom: 5px;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-
-        p.subtitle {
-            color: #a0aec0;
-            margin-bottom: 40px;
-            font-size: 1rem;
-        }
-
-        .btn-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        /* Base Button Styles */
-        .action-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 18px 30px;
-            color: white;
-            text-decoration: none;
-            border-radius: 16px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        /* Individual Button Gradients */
-        .btn-collect {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-        }
-        .btn-results {
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
-        }
-        .btn-translate {
-            background: linear-gradient(135deg, #2ecc71, #27ae60);
-        }
-
-        /* Smooth Hover Animations */
-        .action-btn:hover {
-            transform: translateY(-5px) scale(1.02);
-        }
-        .btn-collect:hover { box-shadow: 0 10px 20px rgba(52, 152, 219, 0.4); }
-        .btn-results:hover { box-shadow: 0 10px 20px rgba(155, 89, 182, 0.4); }
-        .btn-translate:hover { box-shadow: 0 10px 20px rgba(46, 204, 113, 0.4); }
-
-        .icon {
-            margin-right: 12px;
-            font-size: 1.4rem;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="dashboard-container">
-        <h1>👄 AI Lip Reading</h1>
+{% block content %}
+    <div class="header-section">
+        <h1 style="margin-bottom: 8px;">AI Lip Reading</h1>
         <p class="subtitle">Visual Speech Recognition Engine</p>
-        
-        <div class="btn-container">
-            <a href="/collector" class="action-btn btn-collect">
-                <span class="icon">🎥</span> Step 1: Collect Data
-            </a>
-            
-            <a href="/results" class="action-btn btn-results">
-                <span class="icon">📊</span> Step 2: Testing Results
-            </a>
-            
-            <a href="/translator" class="action-btn btn-translate">
-                <span class="icon">🤖</span> Step 3: Live Translator
-            </a>
-        </div>
     </div>
-
-</body>
-</html>
+    
+    <div class="btn-container">
+        <a href="/collector" class="action-btn">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+            <span class="step-label">01</span> Data Collection
+        </a>
+        
+        <a href="/results" class="action-btn">
+            <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            <span class="step-label">02</span> Model Diagnostics
+        </a>
+        
+        <a href="/translator" class="action-btn">
+            <svg class="icon" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+            <span class="step-label">03</span> Live Translator
+        </a>
+    </div>
+{% endblock %}

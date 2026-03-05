@@ -102,8 +102,8 @@ plt.close()
 # 6. Save the Brain
 os.makedirs("models", exist_ok=True)
 torch.save(model.state_dict(), "models/lip_model.pth")
-print("\n🎉 Training Complete! Model saved as 'models/lip_model.pth'")
-print("📈 Graph saved as 'static/loss_curve.png'")
+print("\nTraining Complete! Model saved as 'models/lip_model.pth'")
+print("Graph saved as 'static/loss_curve.png'")
 
 # 7. Extract Training Metrics for the Web Dashboard
 with torch.no_grad():

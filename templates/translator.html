@@ -1,142 +1,206 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live AI Translator</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+{% extends "base.html" %}
+
+{% block title %}Live Translator | AI Lip Reading{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Specific styles for the Translator Page */
     
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            color: #ffffff;
-            display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; padding: 40px 20px; text-align: center;
-        }
-        .dashboard-container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px; padding: 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            max-width: 800px; width: 100%;
-        }
-        .header-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .back-btn { color: #a0aec0; text-decoration: none; font-size: 1rem; font-weight: 600; transition: color 0.3s ease; }
-        .back-btn:hover { color: #3498db; }
-        h1 { font-size: 2rem; font-weight: 700; }
-        
-        .status-badge {
-            display: inline-block;
-            background: rgba(46, 204, 113, 0.2);
-            color: #2ecc71;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            border: 1px solid rgba(46, 204, 113, 0.5);
-            margin-bottom: 20px;
-            box-shadow: 0 0 10px rgba(46, 204, 113, 0.2);
-        }
+    /* Status Indicator */
+    .system-status {
+        display: inline-flex;
+        align-items: center;
+        background: #f0fdf4;
+        color: #166534;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: 1px solid #bbf7d0;
+        margin-bottom: 24px;
+    }
 
-        .video-wrapper img {
-            width: 100%; max-width: 640px;
-            border-radius: 16px;
-            border: 2px solid #2ecc71;
-            box-shadow: 0 0 25px rgba(46, 204, 113, 0.3);
-            background-color: #000;
-        }
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #22c55e;
+        border-radius: 50%;
+        margin-right: 8px;
+        box-shadow: 0 0 0 rgba(34, 197, 94, 0.4);
+        animation: pulse 2s infinite;
+    }
 
-        /* Vocabulary Reminder Styles */
-        .vocab-info {
-            margin-top: 25px;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 15px;
-            border-radius: 12px;
-        }
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+        70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
 
-        .vocab-label {
-            font-size: 0.8rem;
-            color: #a0aec0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-        }
+    /* Action Controls */
+    .translate-btn {
+        width: 100%;
+        padding: 16px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        background-color: var(--primary-blue);
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        box-shadow: 0 4px 6px rgba(30, 58, 138, 0.1);
+    }
 
-        .vocab-list {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        }
+    .translate-btn:hover:not(:disabled) { 
+        background-color: var(--accent-blue);
+        transform: translateY(-2px); 
+        box-shadow: 0 6px 12px rgba(37, 99, 235, 0.15); 
+    }
+    
+    .translate-btn:active:not(:disabled) { 
+        transform: translateY(0); 
+    }
 
-        .word-tag {
-            background: rgba(52, 152, 219, 0.2);
-            color: #3498db;
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-weight: 600;
-            border: 1px solid rgba(52, 152, 219, 0.3);
-        }
+    .translate-btn:disabled { 
+        cursor: not-allowed; 
+        background-color: var(--text-muted);
+        opacity: 0.8; 
+    }
 
-        .instructions {
-            margin-top: 15px;
-            color: #bdc3c7;
-            font-size: 0.9rem;
-            font-style: italic;
-        }
+    .translate-btn svg {
+        width: 20px;
+        height: 20px;
+    }
 
-        /* NEW BUTTON STYLES */
-        .translate-btn {
-            margin-top: 20px;
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
-            transition: all 0.2s;
-        }
-        .translate-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(52, 152, 219, 0.6); }
-        .translate-btn:active:not(:disabled) { transform: translateY(1px); }
-        .translate-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+    /* Result Display Area */
+    .result-box {
+        margin-top: 20px; 
+        padding: 20px;
+        border-radius: 12px;
+        font-size: 1.2rem; 
+        font-weight: 600; 
+        background-color: #f1f5f9;
+        color: var(--text-muted);
+        border: 1px solid var(--border-color);
+        min-height: 65px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
 
-        #translation-result { margin-top: 15px; font-size: 1.5rem; font-weight: 700; color: #f1c40f; min-height: 35px; }
-    </style>
-</head>
-<body>
+    .result-box.processing {
+        background-color: #fffbeb;
+        border-color: #fde68a;
+        color: #b45309;
+    }
 
-    <div class="dashboard-container">
-        <div class="header-nav">
-            <a href="/" class="back-btn">&larr; Back to Home</a>
-            <h1>🤖 Live Translator</h1>
-            <div style="width: 100px;"></div>
+    .result-box.success {
+        background-color: #eff6ff;
+        border-color: #bfdbfe;
+        color: var(--accent-blue);
+        font-size: 1.4rem;
+    }
+
+    .result-box.error {
+        background-color: #fef2f2;
+        border-color: #fecaca;
+        color: #b91c1c;
+        font-size: 1rem;
+    }
+
+    /* Vocabulary Info */
+    .vocab-info {
+        margin-top: 30px;
+        padding-top: 25px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .vocab-label {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+        font-weight: 500;
+    }
+
+    .vocab-list {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .word-tag {
+        background: #eff6ff;
+        color: var(--accent-blue);
+        padding: 6px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border: 1px solid #bfdbfe;
+    }
+
+    .instructions {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="header-nav">
+        <a href="/" class="back-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+        </a>
+        <h1>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="4 14 10 14 10 20"></polyline>
+                <polyline points="20 10 14 10 14 4"></polyline>
+                <line x1="14" y1="10" x2="21" y2="3"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+            Live Translator
+        </h1>
+        <div style="width: 100px;"></div>
+    </div>
+    
+    <div class="system-status">
+        <span class="status-dot"></span> AI Engine Active
+    </div>
+
+    <div class="video-wrapper">
+        <img src="{{ url_for('video_feed_translator') }}" alt="Live AI Feed">
+    </div>
+
+    <button class="translate-btn" id="trans-btn" onclick="triggerTranslation()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        Translate Sequence (Spacebar)
+    </button>
+    
+    <div id="translation-result" class="result-box">Awaiting sequence input...</div>
+
+    <div class="vocab-info">
+        <div class="vocab-label">Supported Commands</div>
+        <div class="vocab-list">
+            <span class="word-tag">OPEN</span>
+            <span class="word-tag">CLOSE</span>
+            <span class="word-tag">STOP</span>
         </div>
-        
-        <div class="status-badge">🟢 AI Engine Active</div>
-
-        <div class="video-wrapper">
-            <img src="{{ url_for('video_feed_translator') }}" alt="Live AI Feed">
-        </div>
-
-        <button class="translate-btn" id="trans-btn" onclick="triggerTranslation()">🔍 Translate (Hit Spacebar)</button>
-        <div id="translation-result">Say your word, then press Spacebar!</div>
-
-        <div class="vocab-info">
-            <div class="vocab-label">Supported Commands (3 Words)</div>
-            <div class="vocab-list">
-                <span class="word-tag">OPEN</span>
-                <span class="word-tag">CLOSE</span>
-                <span class="word-tag">STOP</span>
-            </div>
-        </div>
-
-        <p class="instructions">Look directly at the camera and mouth the words clearly.</p>
+        <p class="instructions">Look directly at the camera, mouth the command, and press the spacebar.</p>
     </div>
 
     <script>
@@ -144,45 +208,59 @@
             let btn = document.getElementById("trans-btn");
             let resultBox = document.getElementById("translation-result");
 
-            if (btn.disabled) return; // Prevent spam-clicking
+            if (btn.disabled) return; 
 
-            // Show loading state
+            // Show loading state without emojis
             btn.disabled = true;
-            btn.innerText = "🧠 Analyzing...";
-            resultBox.innerText = "Grading the last second of video...";
-            resultBox.style.color = "#f1c40f"; // Yellow
+            btn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                Analyzing Sequence...`;
+                
+            resultBox.innerText = "Processing video sequence...";
+            resultBox.className = "result-box processing"; 
 
             fetch('/manual_translate', { method: 'POST' })
             .then(res => res.json())
             .then(data => {
                 btn.disabled = false;
-                btn.innerText = "🔍 Translate (Hit Spacebar)";
+                btn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    Translate Sequence (Spacebar)`;
 
                 if (data.word === "buffer_empty" || data.word === "timeout") {
-                    resultBox.innerText = "Buffer empty! Wait 1 second and try again.";
-                    resultBox.style.color = "#e74c3c"; // Red
+                    resultBox.innerText = "Buffer incomplete. Please wait 1 second and try again.";
+                    resultBox.className = "result-box error";
                 } else {
-                    // Display the AI's guess natively in the HTML!
-                    resultBox.innerText = `🤖 AI Says you said: >>> ${data.word.toUpperCase()} <<<`;
-                    resultBox.style.color = "#2ecc71"; // Green
+                    // Clean, corporate formatting for the AI prediction
+                    resultBox.innerText = `Prediction: ${data.word.toUpperCase()}`;
+                    resultBox.className = "result-box success";
                 }
             })
             .catch(err => {
                 btn.disabled = false;
-                btn.innerText = "🔍 Translate (Hit Spacebar)";
-                resultBox.innerText = "Error communicating with AI.";
-                resultBox.style.color = "#e74c3c";
+                btn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    Translate Sequence (Spacebar)`;
+                    
+                resultBox.innerText = "Error communicating with AI engine.";
+                resultBox.className = "result-box error";
             });
         }
 
-        // --- NEW: SPACEBAR LISTENER ---
+        // Spacebar Event Listener
         document.addEventListener('keydown', function(event) {
-            // Check if the pressed key is the Spacebar (Key code 32 or key ' ')
             if (event.code === 'Space' || event.key === ' ') {
-                event.preventDefault(); // Stop the spacebar from scrolling the page down
+                event.preventDefault(); 
                 triggerTranslation();
             }
         });
     </script>
-</body>
-</html>
+{% endblock %}

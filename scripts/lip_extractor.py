@@ -86,7 +86,7 @@ while True:
             filename = f"dataset/{target_word}/{target_word}_{int(time.time())}.npy"
             np.save(filename, video_sequence)
             
-            print(f"✅ Saved 1 example for: {target_word.upper()}")
+            print(f"Saved 1 example for: {target_word.upper()}")
             
             # Clear the buffer so we don't accidentally save the same video twice
             frame_buffer.clear() 

@@ -1,0 +1,88 @@
+/* static/style.css */
+:root {
+    --primary-blue: #1e3a8a;    
+    --accent-blue: #2563eb;     
+    --bg-light: #f8fafc;        
+    --card-bg: #ffffff;         
+    --text-main: #0f172a;       
+    --text-muted: #64748b;      
+    --border-color: #e2e8f0;    
+}
+
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-light);
+    background-image: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    color: var(--text-main);
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    min-height: 100vh; 
+    padding: 40px 20px; 
+    text-align: center;
+}
+
+.dashboard-container {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px; 
+    padding: 40px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    max-width: 700px; 
+    width: 100%;
+}
+
+.header-nav { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 24px; 
+}
+
+.back-btn { 
+    display: flex;
+    align-items: center;
+    color: var(--text-muted); 
+    text-decoration: none; 
+    font-size: 0.95rem; 
+    font-weight: 500; 
+    transition: color 0.2s ease; 
+}
+
+.back-btn svg { width: 18px; height: 18px; margin-right: 6px; }
+.back-btn:hover { color: var(--accent-blue); }
+
+h1 { 
+    font-size: 1.6rem; 
+    font-weight: 600; 
+    color: var(--primary-blue);
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+h1 svg { width: 24px; height: 24px; stroke: var(--primary-blue); }
+
+.video-wrapper {
+    background-color: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 24px;
+}
+
+.video-wrapper img {
+    width: 100%; 
+    max-width: 640px;
+    border-radius: 8px;
+    display: block;
+    background-color: #0f172a; 
+}

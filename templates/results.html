@@ -1,202 +1,206 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Training Results</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+{% extends "base.html" %}
+
+{% block title %}Model Diagnostics | AI Lip Reading{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Specific styles for the Results Page */
+    .dashboard-container { max-width: 800px; } /* Wider container for the graph */
     
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 40px 20px;
-            text-align: center;
-        }
+    :root {
+        --success-bg: #eff6ff;
+        --success-border: #bfdbfe;
+        --error-bg: #fef2f2;
+        --error-border: #fecaca;
+        --error-text: #b91c1c;
+    }
 
-        .dashboard-container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            max-width: 800px;
-            width: 100%;
-        }
+    /* The Info Block */
+    .info-block {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 30px;
+        text-align: left;
+        flex-wrap: wrap; 
+    }
 
-        .header-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
+    .info-card {
+        flex: 1;
+        min-width: 150px;
+        background: var(--bg-light);
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+    }
 
-        .back-btn {
-            color: #a0aec0;
-            text-decoration: none;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: color 0.3s ease;
-        }
+    .info-card h3 {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
 
-        .back-btn:hover { color: #3498db; }
+    .info-card p {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: var(--text-main);
+    }
 
-        h1 { font-size: 2rem; font-weight: 700; letter-spacing: 1px; }
+    /* The Centered Hero Metric */
+    .hero-metric-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 40px;
+    }
 
-        /* The Info Block */
-        .info-block {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-            text-align: left;
-            flex-wrap: wrap; 
-        }
+    .metric-card {
+        background: var(--success-bg);
+        padding: 30px 60px;
+        border-radius: 16px;
+        border: 1px solid var(--success-border);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
+    }
 
-        .info-card {
-            flex: 1;
-            min-width: 150px;
-            background: rgba(0, 0, 0, 0.15);
-            padding: 20px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
+    .metric-title {
+        font-size: 0.9rem;
+        color: var(--primary-blue);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
 
-        .info-card h3 {
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
+    .metric-value {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--accent-blue); 
+        line-height: 1;
+    }
 
-        .info-card p {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #ecf0f1;
-        }
+    /* The Graph Container */
+    .graph-container {
+        background: var(--bg-light);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 25px;
+        margin-bottom: 25px;
+    }
 
-        /* The Centered Hero Metric */
-        .hero-metric-container {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 40px;
-        }
+    .graph-container h2 {
+        font-size: 1.2rem;
+        color: var(--text-main);
+        margin-bottom: 20px;
+        text-align: left;
+        font-weight: 600;
+    }
 
-        .metric-card {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 30px 60px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: transform 0.3s ease;
-        }
+    .graph-container img {
+        width: 100%;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        display: block;
+    }
 
-        .metric-card:hover { transform: translateY(-5px); }
+    .footer-note {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 400;
+    }
 
-        .metric-title {
-            font-size: 1rem;
-            color: #a0aec0;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-        }
+    .error-state {
+        background: var(--error-bg);
+        border: 1px solid var(--error-border);
+        border-radius: 12px;
+        padding: 40px;
+        color: var(--error-text);
+    }
 
-        .metric-value {
-            font-size: 3rem;
-            font-weight: 700;
-            color: #2ecc71; 
-        }
+    .error-state h2 {
+        font-size: 1.4rem;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
 
-        /* The Graph Container */
-        .graph-container h2 {
-            font-size: 1.4rem;
-            color: #bdc3c7;
-            margin-bottom: 15px;
-            text-align: left;
-        }
+    .error-state p {
+        color: #7f1d1d;
+        font-size: 0.95rem;
+    }
+</style>
+{% endblock %}
 
-        .graph-container img {
-            width: 100%;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .footer-note {
-            margin-top: 30px;
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
-
-        .error-state {
-            color: #e74c3c;
-            font-size: 1.2rem;
-            padding: 40px;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="dashboard-container">
-        
-        <div class="header-nav">
-            <a href="/" class="back-btn">&larr; Back to Home</a>
-            <h1>📊 AI Brain Metrics</h1>
-            <div style="width: 100px;"></div> 
-        </div>
-
-        {% if metrics %}
-            
-            <div class="info-block">
-                <div class="info-card">
-                    <h3 style="color: #3498db;">Dataset Split</h3>
-                    <p>{{ metrics.config.split }}</p>
-                </div>
-                <div class="info-card">
-                    <h3 style="color: #f1c40f;">Initialization</h3>
-                    <p>{{ metrics.config.weights }}</p>
-                </div>
-                <div class="info-card">
-                    <h3 style="color: #9b59b6;">Optimizer</h3>
-                    <p>{{ metrics.config.optimizer }}</p>
-                </div>
-                <div class="info-card">
-                    <h3 style="color: #2ecc71;">Epochs Run</h3>
-                    <p>{{ metrics.config.epochs }}</p>
-                </div>
-            </div>
-
-            <div class="hero-metric-container">
-                <div class="metric-card">
-                    <div class="metric-title">Training Accuracy</div>
-                    <div class="metric-value">{{ metrics.accuracy }}%</div>
-                </div>
-            </div>
-
-            <div class="graph-container">
-                <h2>Training Loss Plateau</h2>
-                <img src="{{ url_for('static', filename='loss_curve.png') }}?v={{ metrics.accuracy }}" alt="AI Learning Curve">
-            </div>
-
-            <p class="footer-note">To improve these scores, collect more varying lighting/angles and re-run the training script!</p>
-
-        {% else %}
-            
-            <div class="error-state">
-                <p>⚠️ No metrics found!</p>
-                <p style="color: #a0aec0; font-size: 1rem; margin-top: 10px;">Please collect data and run the training script first to generate your AI's brain.</p>
-            </div>
-
-        {% endif %}
-
+{% block content %}
+    <div class="header-nav">
+        <a href="/" class="back-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+        </a>
+        <h1>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            Model Diagnostics
+        </h1>
+        <div style="width: 100px;"></div> 
     </div>
 
-</body>
-</html>
+    {% if metrics %}
+        
+        <div class="info-block">
+            <div class="info-card">
+                <h3>Dataset Split</h3>
+                <p>{{ metrics.config.split }}</p>
+            </div>
+            <div class="info-card">
+                <h3>Initialization</h3>
+                <p>{{ metrics.config.weights }}</p>
+            </div>
+            <div class="info-card">
+                <h3>Optimizer</h3>
+                <p>{{ metrics.config.optimizer }}</p>
+            </div>
+            <div class="info-card">
+                <h3>Epochs Run</h3>
+                <p>{{ metrics.config.epochs }}</p>
+            </div>
+        </div>
+
+        <div class="hero-metric-container">
+            <div class="metric-card">
+                <div class="metric-title">Training Accuracy</div>
+                <div class="metric-value">{{ metrics.accuracy }}%</div>
+            </div>
+        </div>
+
+        <div class="graph-container">
+            <h2>Training Loss Convergence</h2>
+            <img src="{{ url_for('static', filename='loss_curve.png') }}?v={{ metrics.accuracy }}" alt="Training Loss Graph">
+        </div>
+
+        <p class="footer-note">To improve generalization, collect data with varying lighting and angles, then retrain the model.</p>
+
+    {% else %}
+        
+        <div class="error-state">
+            <h2>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                No Diagnostics Found
+            </h2>
+            <p>Please collect dataset samples and execute the training script to generate the model's metrics.</p>
+        </div>
+
+    {% endif %}
+{% endblock %}
