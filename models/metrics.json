@@ -1,1 +1,1 @@
-{"accuracy": 72.35, "config": {"split": "100% Training", "weights": "PyTorch Default", "epochs": 25, "optimizer": "Adam (LR=0.001)"}}
+{"accuracy": 58.82, "config": {"split": "100% Training", "weights": "PyTorch Default", "epochs": 25, "optimizer": "Adam (LR=0.001)"}}

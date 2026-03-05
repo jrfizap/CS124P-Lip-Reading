@@ -33,9 +33,9 @@ class MiniLipNet(nn.Module):
 print("Waking up the AI Brain...")
 words = ["open", "close", "stop"]
 model = MiniLipNet()
-# Load the file you just created!
+# Load the file
 model.load_state_dict(torch.load("models/lip_model.pth", weights_only=True))
-model.eval() # Tell the AI it is time to take the test, not study
+model.eval() # Evaluation
 
 # 3. Setup MediaPipe (The Eyes)
 model_path = 'models/face_landmarker.task'
@@ -87,7 +87,7 @@ while True:
     cv2.imshow("Main Camera", frame)
     key = cv2.waitKey(1) & 0xFF
 
-    # 5. The Moment of Truth!
+    # 5. The Moment of Decision
     if key == ord(' '):
         if len(frame_buffer) == SEQUENCE_LENGTH:
             # Package the 29 frames for PyTorch (Add Channel and Batch dimensions)
@@ -99,8 +99,8 @@ while True:
             # Convert to PyTorch Math
             input_tensor = torch.tensor(input_data, dtype=torch.float32)
             
-            # Ask the AI to guess!
-            with torch.no_grad(): # Don't train, just guess
+            # Ask the AI to guess
+            with torch.no_grad():
                 prediction = model(input_tensor)
                 
                 # Find the word with the highest score
